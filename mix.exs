@@ -14,7 +14,7 @@ defmodule Queue.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :gen_stage, :ecto, :postgrex],
      mod: {Queue, []}]
   end
 
@@ -28,6 +28,10 @@ defmodule Queue.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:gen_stage, "~> 0.4"},
+      {:ecto, "~> 2.0.2"},
+      {:postgrex, ">= 0.0.0"}
+    ]
   end
 end
