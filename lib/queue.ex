@@ -24,4 +24,10 @@ defmodule Queue do
     opts = [strategy: :one_for_one, name: Queue.Supervisor]
     Supervisor.start_link(children ++ queue_workers, opts)
   end
+
+  def enqueue(module, function, args) do
+    payload = :erlang.term_to_binary {module, function, args}
+    Queue.Repo.insert_all "tasks", [%{status: "waiting", payload: payload}]
+    send Queue.Provider, :new_tasks_available
+  end
 end

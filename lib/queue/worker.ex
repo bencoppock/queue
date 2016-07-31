@@ -10,9 +10,12 @@ defmodule Queue.Worker do
     {:consumer, initial_state, subscribe_to: [{Queue.Provider, max_demand: 1}]}
   end
 
-  def handle_events(work_items, _from, state) do
-    for work_item <- work_items do
-      IO.inspect {self, work_item}
+  def handle_events(tasks, _from, state) do
+    for task <- tasks do
+      %{id: id, payload: payload} = task
+      {module, function, args} = :erlang.binary_to_term(payload)
+      apply(module, function, args)
+      id
     end
 
     {:noreply, [], state}
