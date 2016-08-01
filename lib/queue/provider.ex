@@ -44,7 +44,7 @@ defmodule Queue.Provider do
   end
 
   defp waiting_tasks(limit) do
-    from t in "tasks",
+    from t in Queue.Task,
       where: t.status == "waiting",
       limit: ^limit,
       select: t.id,

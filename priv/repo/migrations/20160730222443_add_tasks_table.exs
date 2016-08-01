@@ -5,6 +5,8 @@ defmodule Queue.Repo.Migrations.AddTasksTable do
     create table(:tasks) do
       add :payload, :binary, null: false
       add :status, :string
+
+      timestamps
     end
   end
 end

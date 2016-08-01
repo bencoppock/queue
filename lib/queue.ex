@@ -1,5 +1,6 @@
 defmodule Queue do
   use Application
+  import Ecto.Query
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -9,6 +10,7 @@ defmodule Queue do
     # Define workers and child supervisors to be supervised
     children = [
       supervisor(Queue.Repo, []),
+      supervisor(Task.Supervisor, [[name: Queue.TaskSupervisor]]),
       worker(Queue.Provider, [])
     ]
 
@@ -29,5 +31,12 @@ defmodule Queue do
     payload = :erlang.term_to_binary {module, function, args}
     Queue.Repo.insert_all "tasks", [%{status: "waiting", payload: payload}]
     send Queue.Provider, :new_tasks_available
+  end
+
+  def update_status(task_id, status) do
+    Queue.Task
+    |> Queue.Repo.get(task_id)
+    |> Queue.Task.changeset(%{status: status})
+    |> Queue.Repo.update
   end
 end
