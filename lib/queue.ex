@@ -1,6 +1,5 @@
 defmodule Queue do
   use Application
-  import Ecto.Query
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -14,8 +13,8 @@ defmodule Queue do
       worker(Queue.Provider, [])
     ]
 
-    # Start roughly twice as many queue workers as we have cores
-    # since some workers may sometimes wait for IO, etc.
+    # Start twice as many queue workers as we have cores
+    # since some workers will often wait for IO, etc.
     queue_workers =
       for id <- 1..(System.schedulers_online * 2) do
         worker(Queue.Worker, [], id: id)
@@ -27,10 +26,21 @@ defmodule Queue do
     Supervisor.start_link(children ++ queue_workers, opts)
   end
 
-  def enqueue(module, function, args) do
+  @doc """
+  Adds a task to the queue.
+
+  ## Examples
+
+  Queue.enqueue(IO, :puts, ["Hello World!"])
+  """
+  def enqueue(module, function, args \\ []) when is_atom(function) and is_list(args) do
     payload = :erlang.term_to_binary {module, function, args}
-    Queue.Repo.insert_all "tasks", [%{status: "waiting", payload: payload}]
+    Queue.Repo.insert %Queue.Task{status: "waiting", payload: payload}
     send Queue.Provider, :new_tasks_available
+  end
+
+  def cancel(task_id) do
+    update_status(task_id, "canceled")
   end
 
   def update_status(task_id, status) do

@@ -12,30 +12,23 @@ defmodule Queue.Provider do
     {:producer, initial_state}
   end
 
-  def handle_demand(demand, state) when demand > 0 do
-    # We may get demand for x tasks when there aren't that many available yet.
-    # Unfulfilled demand is tracked as state and incorporated into future demand.
-    limit = demand + state
-    {:ok, {count, tasks}} = take_tasks(limit)
-    # The new state will be the total demand minus items actually supplied.
-    {:noreply, tasks, limit - count}
+  def handle_demand(new_demand, existing_demand) when new_demand > 0 do
+    demand = new_demand + existing_demand
+    {:ok, {count, tasks}} = take_tasks(demand)
+    {:noreply, tasks, demand - count}
   end
 
-  def handle_info(:new_tasks_available, state) do
-    # Handle any unfulfilled demand
-    limit = state
-    {:ok, {count, tasks}} = take_tasks(limit)
-    # The new state will be the pent up demand minus items actually supplied.
-    {:noreply, tasks, limit - count}
+  def handle_info(:new_tasks_available, demand) do
+    {:ok, {count, tasks}} = take_tasks(demand)
+    {:noreply, tasks, demand - count}
   end
 
   defp take_tasks(limit) do
     Repo.transaction fn ->
       ids = Repo.all waiting_tasks(limit)
-      {count, tasks} = Repo.update_all by_ids(ids),
+      Repo.update_all by_ids(ids),
         [set: [status: "running"]],
         [returning: [:id, :payload]]
-      {count, tasks}
     end
   end
 
