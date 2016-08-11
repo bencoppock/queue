@@ -1,6 +1,8 @@
 # Queue
 
-**TODO: Add description**
+A basic queue (akin to Ruby's Delayed Job) for Elixir.
+
+Inspired by José Valim's London 2016 presentation introducing GenStage.
 
 ## Installation
 
@@ -22,3 +24,8 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
     end
     ```
 
+## Usage
+
+```elixir
+Queue.enqueue IO, :puts, ["hello world!"]
+```
